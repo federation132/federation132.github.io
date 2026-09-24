@@ -22,32 +22,72 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
 /* ── Arrive at the top, every time ────────────────────────
-   No scroll memory: a reload, or coming back through the browser's back
-   button, lands on the first screen with the opening animation playing. An
-   explicit #fragment is still honoured — that is a link somebody chose to
-   share, not browsing history. `history.scrollRestoration` is switched off in
-   the page head, before the first paint; this runs after parsing so that
-   engines which restore late, and bfcache restores, are covered too. */
-(function startAtTop() {
-  const jump = (top) => {
-    const root = document.documentElement;
-    const previous = root.style.scrollBehavior;
-    root.style.scrollBehavior = 'auto';   // the arrival is instant; the intro is the animation
-    window.scrollTo(0, top);
-    root.style.scrollBehavior = previous;
-  };
+   No scroll memory: a reload, the back button, or a tab the browser restored
+   for you all land on the first screen, with the opening animation playing.
+   An explicit #fragment is still honoured — that is a link somebody chose to
+   share, not browsing history.
+
+   Switching `history.scrollRestoration` off in the page head (before the first
+   paint) is necessary but not sufficient: several engines, and session restore
+   in particular, put the old position back *after* load. So the arrival
+   position is held until the reader starts moving the page themselves, or a
+   short grace period runs out — whichever comes first. */
+(function arriveAtTop() {
+  const GRACE = 1200;   // how long a late restore keeps getting corrected
+  const root = document.documentElement;
+
+  let target = 0;
+  let holding = false;
+  let until = 0;
+  let scheduled = false;
+  let userMoved = false;
 
   const arrivalTop = () => {
     if (!location.hash) return 0;
     try {
-      const target = document.querySelector(location.hash);
-      return target ? target.getBoundingClientRect().top + window.scrollY : 0;
+      const anchor = document.querySelector(location.hash);
+      return anchor ? anchor.getBoundingClientRect().top + window.scrollY : 0;
     } catch (e) { return 0; }   // a malformed hash is not worth a broken page
   };
 
-  jump(arrivalTop());
-  addEventListener('load', () => jump(arrivalTop()), { once: true });
-  addEventListener('pageshow', (e) => { if (e.persisted) jump(arrivalTop()); });
+  const jump = () => {
+    if (Math.abs(window.scrollY - target) < 1) return;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';   // the arrival is instant; the intro is the animation
+    window.scrollTo(0, target);
+    root.style.scrollBehavior = previous;
+  };
+
+  const hold = () => {
+    if (!holding) return;
+    jump();
+    if (performance.now() > until) { holding = false; scheduled = false; return; }
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(() => { scheduled = false; hold(); });
+    }
+  };
+
+  const begin = () => {
+    if (userMoved) return;      // the reader is driving; don't fight them
+    target = arrivalTop();
+    holding = true;
+    until = performance.now() + GRACE;
+    jump();
+    hold();
+  };
+
+  // Any real input means the page is theirs now.
+  ['wheel', 'touchstart', 'pointerdown', 'mousedown', 'keydown'].forEach((type) =>
+    addEventListener(type, () => { userMoved = true; holding = false; }, { passive: true }));
+
+  begin();
+  addEventListener('load', begin);
+  addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    userMoved = false;          // a frozen page came back: treat it as an arrival
+    begin();
+  });
 })();
 
 /* ── Localisation engine ──────────────────────────────────
