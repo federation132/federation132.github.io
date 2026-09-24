@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+# There is no build step — the repository *is* the site. So the only job before
+# deploying is checking the multilingual contract: one language per folder, all
+# of them cross-linked, sitemap in agreement. See tools/check-site.mjs.
+#
+# One-time setup: repository Settings → Pages → Build and deployment →
+# Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deployment finish; never cancel one halfway through.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Validate scripts, pages and sitemap
+        run: |
+          node --check assets/app.js
+          node tools/check-site.mjs
+
+  deploy:
+    name: Deploy
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

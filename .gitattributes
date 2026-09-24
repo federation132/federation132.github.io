@@ -1,0 +1,7 @@
+# Keep line endings identical everywhere: this is a web root, not a Windows app,
+# and mixed CRLF/LF shows up as noise in every future diff.
+* text=auto eol=lf
+
+# Binary assets — never touch these.
+*.jpg binary
+*.png binary

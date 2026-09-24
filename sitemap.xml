@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- One <url> per language, each listing every language: this is what tells a
+     search engine the two pages are the same person, not duplicate content. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://federation132.github.io/</loc>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://federation132.github.io/"/>
+    <xhtml:link rel="alternate" hreflang="zh-HK" href="https://federation132.github.io/zh-HK/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://federation132.github.io/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://federation132.github.io/"/>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://federation132.github.io/zh-HK/</loc>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://federation132.github.io/"/>
+    <xhtml:link rel="alternate" hreflang="zh-HK" href="https://federation132.github.io/zh-HK/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://federation132.github.io/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://federation132.github.io/"/>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://federation132.github.io/en/</loc>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://federation132.github.io/"/>
+    <xhtml:link rel="alternate" hreflang="zh-HK" href="https://federation132.github.io/zh-HK/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://federation132.github.io/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://federation132.github.io/"/>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
