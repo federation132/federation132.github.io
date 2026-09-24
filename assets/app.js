@@ -21,6 +21,35 @@ const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
+/* ── Arrive at the top, every time ────────────────────────
+   No scroll memory: a reload, or coming back through the browser's back
+   button, lands on the first screen with the opening animation playing. An
+   explicit #fragment is still honoured — that is a link somebody chose to
+   share, not browsing history. `history.scrollRestoration` is switched off in
+   the page head, before the first paint; this runs after parsing so that
+   engines which restore late, and bfcache restores, are covered too. */
+(function startAtTop() {
+  const jump = (top) => {
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';   // the arrival is instant; the intro is the animation
+    window.scrollTo(0, top);
+    root.style.scrollBehavior = previous;
+  };
+
+  const arrivalTop = () => {
+    if (!location.hash) return 0;
+    try {
+      const target = document.querySelector(location.hash);
+      return target ? target.getBoundingClientRect().top + window.scrollY : 0;
+    } catch (e) { return 0; }   // a malformed hash is not worth a broken page
+  };
+
+  jump(arrivalTop());
+  addEventListener('load', () => jump(arrivalTop()), { once: true });
+  addEventListener('pageshow', (e) => { if (e.persisted) jump(arrivalTop()); });
+})();
+
 /* ── Localisation engine ──────────────────────────────────
    Everything reads document.documentElement.lang, so a new
    language is a new HTML file — no lookup tables to keep in
@@ -166,7 +195,6 @@ L10N.apply();
   const nav = $('#nav');
   const bar = $('#progressBar');
   const hero = $('#heroInner');
-  const parallax = hero ? $$(':scope > *', hero) : [];
   let queued = false;
 
   function frame() {
@@ -180,14 +208,12 @@ L10N.apply();
       bar.style.transform = 'scaleX(' + (max > 0 ? clamp(y / max, 0, 1) : 0) + ')';
     }
 
-    // A small, restrained depth cue that settles within one viewport.
+    // A small, restrained depth cue. It moves the hero as one layer, so the
+    // arrival animation on its children never has to fight an inline transform.
     if (hero && !reduceMotion()) {
       const t = clamp(y / window.innerHeight, 0, 1);
-      parallax.forEach((el, i) => {
-        const depth = 0.06 + i * 0.02;
-        el.style.transform = 'translate3d(0, ' + (t * window.innerHeight * depth) + 'px, 0)';
-        el.style.opacity = String(clamp(1 - t * (0.85 + i * 0.1), 0, 1));
-      });
+      hero.style.transform = 'translate3d(0, ' + (t * window.innerHeight * 0.06) + 'px, 0)';
+      hero.style.opacity = String(clamp(1 - t * 0.9, 0, 1));
     }
   }
 
@@ -213,12 +239,18 @@ L10N.apply();
 
   let batch = 0;
   const io = new IntersectionObserver((entries) => {
-    entries.filter((e) => e.isIntersecting).forEach((entry) => {
-      entry.target.style.transitionDelay = Math.min(batch * 60, 240) + 'ms';
-      entry.target.classList.add('is-visible');
-      batch++;
-      io.unobserve(entry.target);
-    });
+    // First batch = the page arriving, so it cascades top-to-bottom.
+    // Later batches = one block scrolling into view, so it arrives on its own.
+    const arriving = batch === 0;
+    entries
+      .filter((e) => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+      .forEach((entry, i) => {
+        entry.target.style.setProperty('--i', String(arriving ? i : 0));
+        entry.target.classList.add('is-visible');
+        batch++;
+        io.unobserve(entry.target);
+      });
   }, { rootMargin: '0px 0px -12% 0px', threshold: 0.1 });
 
   items.forEach((el) => io.observe(el));

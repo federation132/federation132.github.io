@@ -41,6 +41,8 @@
       var saved = localStorage.getItem('site-theme');
       if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
     } catch (e) {}
+    // No scroll memory: every arrival starts at the top of the page.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   })();
 </script>
 </head>
@@ -50,7 +52,7 @@
 
 <div class="progress" aria-hidden="true"><i class="progress__bar" id="progressBar"></i></div>
 
-<header class="nav" id="nav">
+<header class="nav" id="nav" data-reveal>
   <div class="nav__inner">
     <a class="nav__brand" href="/" hreflang="zh-CN">
       <span class="nav__mark" aria-hidden="true">尹</span>
@@ -93,19 +95,19 @@
   <section class="hero">
     <div class="hero__glow" aria-hidden="true"></div>
     <div class="container hero__inner" id="heroInner">
-      <p class="eyebrow">中南大学 · 业余无线电 BI2QVE</p>
-      <h1 class="display">干惊天动地事，<br>做隐姓埋名人。</h1>
-      <p class="hero__sub">
+      <p class="eyebrow" data-reveal>中南大学 · 业余无线电 BI2QVE</p>
+      <h1 class="display" data-reveal>干惊天动地事，<br>做隐姓埋名人。</h1>
+      <p class="hero__sub" data-reveal>
         我是尹赫，英文名 <span lang="en">Eric</span>，辽宁沈阳人。现在在中南大学读机械类，
         也是机械类 2602 班的班长。课程之外，时间大多花在兵棋推演、桌游和业余电台上。
       </p>
-      <div class="hero__actions">
+      <div class="hero__actions" data-reveal>
         <a class="btn btn--lg" href="#roles">看看我在做什么</a>
         <a class="link link--lg" href="#contact">联系我 <span class="chev" aria-hidden="true">›</span></a>
       </div>
 
       <!-- 2602 和 BI2QVE 是编号与呼号，不是数量，所以不做数字本地化 -->
-      <dl class="facts">
+      <dl class="facts" data-reveal>
         <div class="fact">
           <dt class="fact__label">机械类班级</dt>
           <dd class="fact__value">2602</dd>
@@ -143,7 +145,7 @@
          role="group" aria-roledescription="轮播" aria-label="学生工作，可拖动浏览">
       <div class="carousel__viewport">
         <ul class="carousel__track" tabindex="0">
-          <li class="work">
+          <li class="work" data-reveal>
             <a class="work__link" href="#">
               <span class="cover cover--ocean"><span class="cover__num" aria-hidden="true">01</span></span>
               <span class="work__body">
@@ -157,7 +159,7 @@
               </span>
             </a>
           </li>
-          <li class="work">
+          <li class="work" data-reveal>
             <a class="work__link" href="#">
               <span class="cover cover--lilac"><span class="cover__num" aria-hidden="true">02</span></span>
               <span class="work__body">
@@ -171,7 +173,7 @@
               </span>
             </a>
           </li>
-          <li class="work">
+          <li class="work" data-reveal>
             <a class="work__link" href="#">
               <span class="cover cover--mint"><span class="cover__num" aria-hidden="true">03</span></span>
               <span class="work__body">

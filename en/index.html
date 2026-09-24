@@ -40,6 +40,8 @@
       var saved = localStorage.getItem('site-theme');
       if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
     } catch (e) {}
+    // No scroll memory: every arrival starts at the top of the page.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   })();
 </script>
 </head>
@@ -49,7 +51,7 @@
 
 <div class="progress" aria-hidden="true"><i class="progress__bar" id="progressBar"></i></div>
 
-<header class="nav" id="nav">
+<header class="nav" id="nav" data-reveal>
   <div class="nav__inner">
     <a class="nav__brand" href="/en/" hreflang="en">
       <span class="nav__mark" aria-hidden="true">尹</span>
@@ -92,21 +94,21 @@
   <section class="hero">
     <div class="hero__glow" aria-hidden="true"></div>
     <div class="container hero__inner" id="heroInner">
-      <p class="eyebrow">Central South University · Amateur radio BI2QVE</p>
-      <h1 class="display">Shake the world,<br>and stay unknown.</h1>
-      <p class="hero__sub">
+      <p class="eyebrow" data-reveal>Central South University · Amateur radio BI2QVE</p>
+      <h1 class="display" data-reveal>Shake the world,<br>and stay unknown.</h1>
+      <p class="hero__sub" data-reveal>
         I'm Eric Yin — from Shenyang, Liaoning, now studying mechanical engineering at
         Central South University in Changsha, and class monitor of Class 2602.
         Away from coursework I'm mostly wargaming, playing board games, or on the air.
       </p>
-      <div class="hero__actions">
+      <div class="hero__actions" data-reveal>
         <a class="btn btn--lg" href="#roles">See what I do</a>
         <a class="link link--lg" href="#contact">Get in touch <span class="chev" aria-hidden="true">›</span></a>
       </div>
 
       <!-- 2602 is a class designation and BI2QVE is a callsign: identifiers,
            not quantities, so neither one goes through number formatting. -->
-      <dl class="facts">
+      <dl class="facts" data-reveal>
         <div class="fact">
           <dt class="fact__label">Mechanical engineering class</dt>
           <dd class="fact__value">2602</dd>
@@ -147,7 +149,7 @@
          role="group" aria-roledescription="carousel" aria-label="Student roles, draggable">
       <div class="carousel__viewport">
         <ul class="carousel__track" tabindex="0">
-          <li class="work">
+          <li class="work" data-reveal>
             <a class="work__link" href="#">
               <span class="cover cover--ocean"><span class="cover__num" aria-hidden="true">01</span></span>
               <span class="work__body">
@@ -161,7 +163,7 @@
               </span>
             </a>
           </li>
-          <li class="work">
+          <li class="work" data-reveal>
             <a class="work__link" href="#">
               <span class="cover cover--lilac"><span class="cover__num" aria-hidden="true">02</span></span>
               <span class="work__body">
@@ -175,7 +177,7 @@
               </span>
             </a>
           </li>
-          <li class="work">
+          <li class="work" data-reveal>
             <a class="work__link" href="#">
               <span class="cover cover--mint"><span class="cover__num" aria-hidden="true">03</span></span>
               <span class="work__body">

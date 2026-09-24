@@ -45,6 +45,7 @@
   --nav-h: 52px;
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);   /* settles like a spring, without overshoot */
 }
 
 [data-theme="dark"] {
@@ -358,7 +359,7 @@ a { color: inherit; text-decoration: none; }
   mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 92%);
 }
 
-.hero__inner { position: relative; }
+.hero__inner { position: relative; will-change: transform, opacity; }
 .hero__inner > * { will-change: transform, opacity; }
 
 .hero__sub {
@@ -778,11 +779,17 @@ a { color: inherit; text-decoration: none; }
 .lang-hint__go.is-current-variant { display: inline-flex; }
 .lang-hint__close.is-current-variant { display: grid; }
 
-/* ── Reveal on scroll ───────────────────────────────────── */
-[data-reveal] { opacity: 0; transform: translateY(16px); }
+/* ── Arrival: the page comes up from below, one block at a time ──
+   Everything starts 22px low and slightly transparent, then rises into place.
+   The stagger lives in `--i`, set by app.js: blocks already on screen when the
+   page loads cascade top-to-bottom, and anything appearing later (on scroll)
+   arrives on its own. */
+[data-reveal] { opacity: 0; transform: translate3d(0, 22px, 0); }
 [data-reveal].is-visible {
   opacity: 1; transform: none;
-  transition: opacity 620ms var(--ease-out), transform 720ms var(--ease-out);
+  transition:
+    opacity 640ms var(--ease-out) calc(var(--i, 0) * 70ms),
+    transform 880ms var(--ease-rise) calc(var(--i, 0) * 70ms);
 }
 
 /* ── Responsive ─────────────────────────────────────────── */
