@@ -22,70 +22,69 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
 /* ── Arrive at the top, every time ────────────────────────
-   No scroll memory: a reload, the back button, or a tab the browser restored
-   for you all land on the first screen, with the opening animation playing.
-   An explicit #fragment is still honoured — that is a link somebody chose to
-   share, not browsing history.
+   The page has no scroll memory: a reload, the back button, or a tab the
+   browser restored for you all land on the first screen, with the opening
+   animation playing. A #fragment is not an exception any more — the page head
+   drops it before the body is parsed, because in practice it was never a
+   destination. Clicking 「联系」 leaves #contact in the address bar, and from
+   then on every reload, restored tab and autocompleted visit opened at the
+   very bottom of the page.
 
-   Switching `history.scrollRestoration` off in the page head (before the first
-   paint) is necessary but not sufficient: several engines, and session restore
-   in particular, put the old position back *after* load. So the arrival
-   position is held until the reader starts moving the page themselves, or a
-   short grace period runs out — whichever comes first. */
+   The page head also switches `history.scrollRestoration` off before the
+   first paint, which is what the engines that implement it need. This is the
+   half that has to hold when they do not: rather than a timer a slow browser
+   can simply outrun, the correction runs the moment the position changes —
+   however late that is — so a restore landing after `load` is undone as
+   reliably as one landing before it. It gives way at the first real input,
+   and after a bounded number of corrections, so it never becomes a
+   tug-of-war. */
 (function arriveAtTop() {
-  const GRACE = 1200;   // how long a late restore keeps getting corrected
+  const GRACE = 2500;    // past this, a late restore is not one we can win by fighting
+  const MAX_FIXES = 8;   // bounded, so the arrival always gives way in the end
+
   const root = document.documentElement;
 
-  let target = 0;
-  let holding = false;
-  let until = 0;
-  let scheduled = false;
-  let userMoved = false;
-
-  const arrivalTop = () => {
-    if (!location.hash) return 0;
-    try {
-      const anchor = document.querySelector(location.hash);
-      return anchor ? anchor.getBoundingClientRect().top + window.scrollY : 0;
-    } catch (e) { return 0; }   // a malformed hash is not worth a broken page
-  };
+  let deadline = 0;
+  let fixes = 0;
+  let theirs = false;    // the reader is driving now
 
   const jump = () => {
-    if (Math.abs(window.scrollY - target) < 1) return;
     const previous = root.style.scrollBehavior;
     root.style.scrollBehavior = 'auto';   // the arrival is instant; the intro is the animation
-    window.scrollTo(0, target);
+    window.scrollTo(0, 0);
     root.style.scrollBehavior = previous;
   };
 
   const hold = () => {
-    if (!holding) return;
+    if (theirs || fixes >= MAX_FIXES) return;
+    if (performance.now() > deadline) return;
+    if (window.scrollY === 0) return;
+    fixes++;
     jump();
-    if (performance.now() > until) { holding = false; scheduled = false; return; }
-    if (!scheduled) {
-      scheduled = true;
-      requestAnimationFrame(() => { scheduled = false; hold(); });
-    }
   };
 
   const begin = () => {
-    if (userMoved) return;      // the reader is driving; don't fight them
-    target = arrivalTop();
-    holding = true;
-    until = performance.now() + GRACE;
-    jump();
+    if (theirs) return;
+    deadline = performance.now() + GRACE;
     hold();
   };
 
-  // Any real input means the page is theirs now.
+  // Any position the page takes that the reader did not ask for is undone.
+  addEventListener('scroll', hold, { passive: true });
+
+  // Real input means the page is theirs now.
   ['wheel', 'touchstart', 'pointerdown', 'mousedown', 'keydown'].forEach((type) =>
-    addEventListener(type, () => { userMoved = true; holding = false; }, { passive: true }));
+    addEventListener(type, () => { theirs = true; }, { passive: true }));
+
+  // Following an in-page link is a choice: the browser's own smooth scroll wins.
+  addEventListener('hashchange', () => { theirs = true; });
 
   begin();
   addEventListener('load', begin);
   addEventListener('pageshow', (event) => {
     if (!event.persisted) return;
-    userMoved = false;          // a frozen page came back: treat it as an arrival
+    theirs = false;             // a frozen page came back: treat it as an arrival
+    fixes = 0;
     begin();
   });
 })();

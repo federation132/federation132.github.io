@@ -42,8 +42,19 @@
       var saved = localStorage.getItem('site-theme');
       if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
     } catch (e) {}
-    // No scroll memory: every arrival starts at the top of the page.
+    // Every arrival starts at the top of the page.
+    //
+    // A fragment in the address bar is browsing residue, not a destination:
+    // clicking 联系 / 联系我 leaves #contact behind, and from then on every
+    // reload, restored tab and autocompleted visit would open at the very
+    // bottom of the page. So there is no scroll memory *and* no fragment —
+    // dropping it here, before the body is parsed, also stops the browser from
+    // jumping down in the first place. app.js then holds the arrival position
+    // for the engines that put it back after load anyway.
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    if (location.hash) {
+      try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) {}
+    }
   })();
 </script>
 </head>
